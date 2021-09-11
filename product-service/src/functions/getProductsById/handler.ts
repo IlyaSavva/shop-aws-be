@@ -3,17 +3,33 @@ import 'source-map-support/register';
 import type { APIGatewayProxyEvent } from 'aws-lambda';
 import { formatResponse } from '@libs/apiGateway';
 import { middyfy } from '@libs/lambda';
-
-import products from '@data/products.json';
+import { dbConnection } from '@libs/dbConnection';
 
 const getProductsById = async (event: APIGatewayProxyEvent) => {
-  const { id } = event.pathParameters;
+  const id = event?.pathParameters?.id;
 
-  const product = products.find((item) => item.id === +id);
+  if (!id) return formatResponse({ message: 'Bad request' }, 400);
 
-  if (!product) return formatResponse({ message: 'Product not found' }, 404);
+  const connection = await dbConnection();
+  let data;
 
-  return formatResponse({ product }, 200);
+  try {
+    data = await connection.query(`
+      SELECT products.id, title, description, price, count
+      FROM products
+      JOIN stocks
+      ON products.id = stocks.product_id
+      WHERE products.id = '${id}';
+    `);
+  } catch(err) {
+    console.error('Error on db query', err);
+  } finally {
+    connection.end();
+  }
+  
+  if (!data) return formatResponse({ message: 'Product not found' }, 404);
+
+  return formatResponse({ data: data.rows[0] }, 200);
 }
 
 export const main = middyfy(getProductsById);
