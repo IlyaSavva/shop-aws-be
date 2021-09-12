@@ -1,10 +1,13 @@
 import 'source-map-support/register';
 
+import type { APIGatewayProxyEvent } from 'aws-lambda';
 import { formatResponse } from '@libs/apiGateway';
 import { middyfy } from '@libs/lambda';
 import { dbConnection } from '@libs/dbConnection';
 
-const getProductsList = async () => {
+const getProductsList = async (event: APIGatewayProxyEvent) => {
+  console.log('[Logger] Event: ', event);
+
   const connection = await dbConnection();
   let data;
 
@@ -17,6 +20,7 @@ const getProductsList = async () => {
     `);
   } catch(err) {
     console.error('Error on db query', err);
+    return formatResponse({ message: 'Internal error', code: 500 }, 500);
   } finally {
     connection.end();
   }

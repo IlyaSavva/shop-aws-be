@@ -1,4 +1,5 @@
 import { handlerPath } from '@libs/handlerResolver';
+import schema from './schema';
 
 export default {
   handler: `${handlerPath(__dirname)}/handler.main`,
@@ -7,7 +8,12 @@ export default {
       http: {
         method: 'post',
         path: 'product',
-        cors: true
+        cors: true,
+        request: {
+          schema: {
+            'application/json': schema
+          }
+        }
       }
     }
   ]

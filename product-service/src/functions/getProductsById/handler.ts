@@ -6,6 +6,8 @@ import { middyfy } from '@libs/lambda';
 import { dbConnection } from '@libs/dbConnection';
 
 const getProductsById = async (event: APIGatewayProxyEvent) => {
+  console.log('[Logger] Event: ', event);
+  console.log('[Logger] Path parameters: ', event.pathParameters );
   const id = event?.pathParameters?.id;
 
   if (!id) return formatResponse({ message: 'Bad request' }, 400);
@@ -23,6 +25,7 @@ const getProductsById = async (event: APIGatewayProxyEvent) => {
     `);
   } catch(err) {
     console.error('Error on db query', err);
+    return formatResponse({ message: 'Internal error', code: 500 }, 500);
   } finally {
     connection.end();
   }
